@@ -16,21 +16,24 @@ ARG VIKUNJA_FRONTEND_BASE=/
 RUN echo "{\"VERSION\": \"${RELEASE_VERSION/-g/-}\"}" > src/version.json && \
     VIKUNJA_FRONTEND_BASE="$VIKUNJA_FRONTEND_BASE" pnpm run build
 
-FROM --platform=$BUILDPLATFORM ghcr.io/techknowlogick/xgo:go-1.26.x@sha256:b00957d8fec512c4748a5fafe17197be1d8c0bf704b271fc4aa128f5ddf40414 AS apibuilder
+FROM golang:1.26-alpine@sha256:28d89ee9cc0ff9fec75c82ca201e6bf7fdf9a679d4b7b24dfa04f2bb766bb468 AS apibuilder
 
-RUN go install github.com/magefile/mage@latest && \
-    mv /go/bin/mage /usr/local/go/bin
+RUN apk add --no-cache build-base ca-certificates
 
 WORKDIR /go/src/code.vikunja.io/api
+COPY go.mod go.sum ./
+RUN go mod download
 COPY . ./
 COPY --from=frontendbuilder /build/dist ./frontend/dist
 
-ARG TARGETOS TARGETARCH TARGETVARIANT RELEASE_VERSION
+ARG RELEASE_VERSION
 ENV RELEASE_VERSION=$RELEASE_VERSION
 
-RUN export PATH=$PATH:$GOPATH/bin && \
-	mage build:clean && \
-    (cd build && mage release:xgo vikunja "${TARGETOS}/${TARGETARCH}/${TARGETVARIANT}")
+RUN CGO_ENABLED=1 go build \
+    -tags "osusergo netgo" \
+    -ldflags "-linkmode external -extldflags '-static' -X 'code.vikunja.io/api/pkg/version.Version=${RELEASE_VERSION}' -X 'main.Tags=osusergo netgo'" \
+    -o /build/vikunja \
+    .
 
 RUN mkdir -p /tmp && chmod 1777 /tmp
 
@@ -59,5 +62,5 @@ USER 1000
 ENV VIKUNJA_SERVICE_ROOTPATH=/app/vikunja/
 ENV VIKUNJA_DATABASE_PATH=/db/vikunja.db
 
-COPY --from=apibuilder /build/vikunja-* vikunja
+COPY --from=apibuilder /build/vikunja vikunja
 COPY --from=apibuilder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
