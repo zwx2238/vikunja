@@ -36,10 +36,14 @@ import (
 // try refreshing" from other 401s (disabled account, wrong API token, etc.).
 const ErrCodeInvalidToken = 11
 
+const forwardedServiceAuthorizationHeader = "X-Local-Agent-Service-Authorization"
+
 func SetupTokenMiddleware() echo.MiddlewareFunc {
 	return echojwt.WithConfig(echojwt.Config{
 		SigningKey: []byte(config.ServiceSecret.GetString()),
 		Skipper: func(c *echo.Context) bool {
+			promoteForwardedServiceAuthorization(c)
+
 			// Public routes (docs, spec, info, etc.) never need JWT even
 			// when their parent group has the middleware applied.
 			if unauthenticatedAPIPaths[c.Path()] {
@@ -73,6 +77,18 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 			return nil
 		},
 	})
+}
+
+func promoteForwardedServiceAuthorization(c *echo.Context) {
+	request := c.Request()
+	forwarded := request.Header.Values(forwardedServiceAuthorizationHeader)
+	request.Header.Del(forwardedServiceAuthorizationHeader)
+	if request.Header.Get("Authorization") != "" || len(forwarded) != 1 {
+		return
+	}
+	if strings.HasPrefix(forwarded[0], "Bearer ") {
+		request.Header.Set("Authorization", forwarded[0])
+	}
 }
 
 func checkAPITokenAndPutItInContext(tokenHeaderValue string, c *echo.Context, skipRouteCheck bool) error {

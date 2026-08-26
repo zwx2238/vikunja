@@ -3,6 +3,8 @@ import type {AxiosRequestConfig} from 'axios'
 import {getToken, refreshToken} from '@/helpers/auth'
 import {AUTH_TYPES} from '@/modelTypes/IUser'
 
+const FORWARDED_SERVICE_AUTHORIZATION_HEADER = 'X-Local-Agent-Service-Authorization'
+
 /**
  * Returns the API base URL with a guaranteed trailing slash.
  */
@@ -80,6 +82,14 @@ function getTokenType(token: string | null): number | null {
 	}
 }
 
+export function bearerTokenHeaders(token: string): Record<string, string> {
+	const authorization = `Bearer ${token}`
+	return {
+		Authorization: authorization,
+		[FORWARDED_SERVICE_AUTHORIZATION_HEADER]: authorization,
+	}
+}
+
 export function AuthenticatedHTTPFactory() {
 	const instance = HTTPFactory()
 
@@ -92,7 +102,7 @@ export function AuthenticatedHTTPFactory() {
 		// Set the default auth header if we have a token
 		const token = getToken()
 		if (token !== null) {
-			config.headers['Authorization'] = `Bearer ${token}`
+			Object.assign(config.headers, bearerTokenHeaders(token))
 		}
 		return config
 	})
@@ -139,7 +149,7 @@ export function AuthenticatedHTTPFactory() {
 		// Retry the original request with the new token.
 		originalRequest.headers = {
 			...originalRequest.headers,
-			Authorization: `Bearer ${newToken}`,
+			...bearerTokenHeaders(newToken),
 		}
 		return instance.request(originalRequest)
 	})

@@ -41,7 +41,7 @@ func TestHealthcheck(t *testing.T) {
 	t.Run("route", func(t *testing.T) {
 		rec, err := newTestRequest(t, http.MethodGet, routes.HealthcheckHandler, ``, nil, nil)
 		require.NoError(t, err)
-		assert.Contains(t, rec.Body.String(), "OK")
+		assert.JSONEq(t, `{"ok":true,"running":true}`, rec.Body.String())
 	})
 }
 

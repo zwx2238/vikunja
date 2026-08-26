@@ -24,10 +24,13 @@ import (
 	"code.vikunja.io/api/pkg/health"
 )
 
-// HealthcheckHandler handles healthckeck 'OK' response
+// HealthcheckHandler reports the service health in the Hub-compatible shape.
 func HealthcheckHandler(c *echo.Context) error {
 	if err := health.Check(); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error").Wrap(err)
 	}
-	return c.String(http.StatusOK, "OK")
+	return c.JSON(http.StatusOK, map[string]bool{
+		"ok":      true,
+		"running": true,
+	})
 }
