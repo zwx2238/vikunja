@@ -1,7 +1,7 @@
 import {computed, readonly, ref} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
 
-import {AuthenticatedHTTPFactory, HTTPFactory} from '@/helpers/fetcher'
+import {AuthenticatedHTTPFactory, bearerTokenHeaders, HTTPFactory} from '@/helpers/fetcher'
 import {getBrowserLanguage, i18n, setLanguage} from '@/i18n'
 import {objectToSnakeCase} from '@/helpers/case'
 import UserModel, {getDisplayName, fetchAvatarBlobUrl, invalidateAvatarCache} from '@/models/user'
@@ -27,6 +27,7 @@ import {DATE_DISPLAY} from '@/constants/dateDisplay'
 import {TIME_FORMAT} from '@/constants/timeFormat'
 import {RELATION_KIND} from '@/types/IRelationKind'
 import type {IProvider} from '@/types/IProvider'
+import {LOCAL_AGENT_SERVICE_LOGIN_TOKEN} from '@/helpers/localAgentService'
 
 // Set on explicit logout so the login page won't immediately bounce the user
 // back to the OIDC provider. Lives in sessionStorage so it survives the
@@ -216,6 +217,24 @@ export const useAuthStore = defineStore('auth', () => {
 			}
 
 			throw e
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
+	async function loginWithLocalAgentService() {
+		const HTTP = HTTPFactory()
+		setIsLoading(true)
+		removeToken()
+
+		try {
+			const response = await HTTP.post('login', {
+				long_token: true,
+			}, {
+				headers: bearerTokenHeaders(LOCAL_AGENT_SERVICE_LOGIN_TOKEN),
+			})
+			saveToken(response.data.token, true)
+			await checkAuth()
 		} finally {
 			setIsLoading(false)
 		}
@@ -617,6 +636,7 @@ export const useAuthStore = defineStore('auth', () => {
 		updateLastUserRefresh,
 
 		login,
+		loginWithLocalAgentService,
 		register,
 		openIdAuth,
 		handleDesktopOAuthTokens,

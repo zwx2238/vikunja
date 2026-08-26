@@ -66,6 +66,7 @@
 			<TimerBadge />
 			<OpenQuickActions />
 			<Notifications />
+			<ServiceCloseButton v-if="localAgentService" />
 			<Dropdown>
 				<template #trigger="{ toggleOpen, open }">
 					<BaseButton
@@ -121,7 +122,10 @@
 				<DropdownItem :to="{ name: 'about' }">
 					{{ $t('about.title') }}
 				</DropdownItem>
-				<DropdownItem @click="authStore.logout()">
+				<DropdownItem
+					v-if="!localAgentService"
+					@click="authStore.logout()"
+				>
 					{{ $t('user.auth.logout') }}
 				</DropdownItem>
 			</Dropdown>
@@ -146,6 +150,7 @@ import Logo from '@/components/home/Logo.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import MenuButton from '@/components/home/MenuButton.vue'
 import OpenQuickActions from '@/components/misc/OpenQuickActions.vue'
+import ServiceCloseButton from '@/components/home/ServiceCloseButton.vue'
 
 import { getProjectTitle } from '@/helpers/getProjectTitle'
 import { isEditorContentEmpty } from '@/helpers/editorContentEmpty'
@@ -154,6 +159,7 @@ import { useBaseStore } from '@/stores/base'
 import { useConfigStore } from '@/stores/config'
 import { useAuthStore } from '@/stores/auth'
 import type { IProject } from '@/modelTypes/IProject'
+import {isLocalAgentTodoService} from '@/helpers/localAgentService'
 
 const baseStore = useBaseStore()
 // Create a mutable copy to satisfy type requirements (readonly deep -> mutable)
@@ -164,6 +170,7 @@ const currentProject = computed<IProject | null>(() => {
 const background = computed(() => baseStore.background)
 const canWriteCurrentProject = computed(() => baseStore.currentProject?.maxPermission !== null && baseStore.currentProject?.maxPermission !== undefined && baseStore.currentProject.maxPermission > Permissions.READ)
 const menuActive = computed(() => baseStore.menuActive)
+const localAgentService = isLocalAgentTodoService()
 
 // Standalone pages (no project) surface their route's title in the header.
 const route = useRoute()

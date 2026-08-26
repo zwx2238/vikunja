@@ -9,108 +9,128 @@
 			{{ $t('user.auth.confirmEmailSuccess') }}
 		</Message>
 		<Message
-			v-if="errorMessage"
+			v-if="errorMessage && !localAgentService"
 			variant="danger"
 			class="mbe-4"
 		>
 			{{ errorMessage }}
 		</Message>
 
-		<DesktopLogin v-if="isDesktop" />
-
-		<form
-			v-if="!isDesktop && (localAuthEnabled || ldapAuthEnabled)"
-			id="loginform"
-			@submit.prevent="submit"
-		>
-			<FormField
-				id="username"
-				ref="usernameRef"
-				v-focus
-				:label="$t('user.auth.usernameEmail')"
-				name="username"
-				:placeholder="$t('user.auth.usernamePlaceholder')"
-				required
-				type="text"
-				autocomplete="username"
-				:error="usernameValid ? null : $t('user.auth.usernameRequired')"
-				@keyup.enter="submit"
-				@focusout="validateUsernameField()"
+		<template v-if="localAgentService">
+			<Loading
+				v-if="serviceLoginPending"
+				variant="small"
 			/>
-			<div class="field">
-				<div class="label-with-link">
-					<label
-						class="label"
-						for="password"
-					>{{ $t('user.auth.password') }}</label>
-					<RouterLink
-						v-if="localAuthEnabled"
-						:to="{ name: 'user.password-reset.request' }"
-						class="reset-password-link"
-					>
-						{{ $t('user.auth.forgotPassword') }}
-					</RouterLink>
-				</div>
-				<Password
-					v-model="password"
-					:validate-initially="validatePasswordInitially"
-					:validate-min-length="false"
-					@submit="submit"
-				/>
-			</div>
-			<FormField
-				v-if="needsTotpPasscode"
-				id="totpPasscode"
-				ref="totpPasscode"
-				v-focus
-				:label="$t('user.auth.totpTitle')"
-				autocomplete="one-time-code"
-				:placeholder="$t('user.auth.totpPlaceholder')"
-				required
-				type="text"
-				inputmode="numeric"
-				@keyup.enter="submit"
-			/>
-			<FormCheckbox
-				v-model="rememberMe"
-				:label="$t('user.auth.remember')"
-			/>
-
-			<XButton
-				:loading="isLoading"
-				@click="submit"
-			>
-				{{ $t('user.auth.login') }}
-			</XButton>
-			<p
-				v-if="registrationEnabled"
-				class="mbs-2"
-			>
-				{{ $t('user.auth.noAccountYet') }}
-				<RouterLink
-					:to="{ name: 'user.register' }"
-					type="secondary"
-					class="inline-link"
+			<template v-else-if="errorMessage">
+				<Message
+					variant="danger"
+					class="mbe-4"
 				>
-					{{ $t('user.auth.createAccount') }}
-				</RouterLink>
-			</p>
-		</form>
+					{{ errorMessage }}
+				</Message>
+				<XButton @click="loginWithLocalAgentService">
+					{{ $t('sharing.retry') }}
+				</XButton>
+			</template>
+		</template>
 
-		<div
-			v-if="!isDesktop && hasOpenIdProviders"
-			class="mbs-4"
-		>
-			<XButton
-				v-for="(p, k) in openidConnect.providers"
-				:key="k"
-				variant="secondary"
-				class="is-fullwidth mbs-2"
-				@click="redirectToProvider(p)"
+		<template v-else>
+			<DesktopLogin v-if="isDesktop" />
+
+			<form
+				v-if="!isDesktop && (localAuthEnabled || ldapAuthEnabled)"
+				id="loginform"
+				@submit.prevent="submit"
 			>
-				{{ $t('user.auth.loginWith', {provider: p.name}) }}
-			</XButton>
-		</div>
+				<FormField
+					id="username"
+					ref="usernameRef"
+					v-focus
+					:label="$t('user.auth.usernameEmail')"
+					name="username"
+					:placeholder="$t('user.auth.usernamePlaceholder')"
+					required
+					type="text"
+					autocomplete="username"
+					:error="usernameValid ? null : $t('user.auth.usernameRequired')"
+					@keyup.enter="submit"
+					@focusout="validateUsernameField()"
+				/>
+				<div class="field">
+					<div class="label-with-link">
+						<label
+							class="label"
+							for="password"
+						>{{ $t('user.auth.password') }}</label>
+						<RouterLink
+							v-if="localAuthEnabled"
+							:to="{ name: 'user.password-reset.request' }"
+							class="reset-password-link"
+						>
+							{{ $t('user.auth.forgotPassword') }}
+						</RouterLink>
+					</div>
+					<Password
+						v-model="password"
+						:validate-initially="validatePasswordInitially"
+						:validate-min-length="false"
+						@submit="submit"
+					/>
+				</div>
+				<FormField
+					v-if="needsTotpPasscode"
+					id="totpPasscode"
+					ref="totpPasscode"
+					v-focus
+					:label="$t('user.auth.totpTitle')"
+					autocomplete="one-time-code"
+					:placeholder="$t('user.auth.totpPlaceholder')"
+					required
+					type="text"
+					inputmode="numeric"
+					@keyup.enter="submit"
+				/>
+				<FormCheckbox
+					v-model="rememberMe"
+					:label="$t('user.auth.remember')"
+				/>
+
+				<XButton
+					:loading="isLoading"
+					@click="submit"
+				>
+					{{ $t('user.auth.login') }}
+				</XButton>
+				<p
+					v-if="registrationEnabled"
+					class="mbs-2"
+				>
+					{{ $t('user.auth.noAccountYet') }}
+					<RouterLink
+						:to="{ name: 'user.register' }"
+						type="secondary"
+						class="inline-link"
+					>
+						{{ $t('user.auth.createAccount') }}
+					</RouterLink>
+				</p>
+			</form>
+
+			<div
+				v-if="!isDesktop && hasOpenIdProviders"
+				class="mbs-4"
+			>
+				<XButton
+					v-for="(p, k) in openidConnect.providers"
+					:key="k"
+					variant="secondary"
+					class="is-fullwidth mbs-2"
+					@click="redirectToProvider(p)"
+				>
+					{{ $t('user.auth.loginWith', {provider: p.name}) }}
+				</XButton>
+			</div>
+		</template>
 	</div>
 </template>
 
@@ -125,6 +145,7 @@ import Password from '@/components/input/Password.vue'
 import FormField from '@/components/input/FormField.vue'
 import FormCheckbox from '@/components/input/FormCheckbox.vue'
 import DesktopLogin from '@/views/user/DesktopLogin.vue'
+import Loading from '@/components/misc/Loading.vue'
 
 import {getErrorText} from '@/message'
 import {redirectToProvider} from '@/helpers/redirectToProvider'
@@ -135,6 +156,7 @@ import {useAuthStore, JUST_LOGGED_OUT_KEY} from '@/stores/auth'
 import {useConfigStore} from '@/stores/config'
 
 import {useTitle} from '@/composables/useTitle'
+import {isLocalAgentTodoService} from '@/helpers/localAgentService'
 
 const {t} = useI18n({useScope: 'global'})
 useTitle(() => t('user.auth.login'))
@@ -153,9 +175,11 @@ const hasOpenIdProviders = computed(() => openidConnect.value.enabled && openidC
 
 const isLoading = computed(() => authStore.isLoading)
 const isDesktop = isDesktopApp()
+const localAgentService = isLocalAgentTodoService()
 
 const confirmedEmailSuccess = ref(false)
 const errorMessage = ref('')
+const serviceLoginPending = ref(localAgentService)
 const password = ref('')
 const validatePasswordInitially = ref(false)
 const rememberMe = ref(false)
@@ -163,12 +187,6 @@ const rememberMe = ref(false)
 const authenticated = computed(() => authStore.authenticated)
 
 onBeforeMount(() => {
-	authStore.verifyEmail().then((confirmed) => {
-		confirmedEmailSuccess.value = confirmed
-	}).catch((e: Error) => {
-		errorMessage.value = e.message
-	})
-
 	// Check if the user is already logged in, if so, redirect them to the homepage.
 	// We intentionally use router.push here instead of redirectIfSaved() because
 	// this hook also fires when Login.vue re-mounts inside the authenticated layout
@@ -178,6 +196,17 @@ onBeforeMount(() => {
 		router.push({name: 'home'})
 		return
 	}
+
+	if (localAgentService) {
+		void loginWithLocalAgentService()
+		return
+	}
+
+	authStore.verifyEmail().then((confirmed) => {
+		confirmedEmailSuccess.value = confirmed
+	}).catch((e: Error) => {
+		errorMessage.value = e.message
+	})
 
 	// Don't auto-redirect right after an explicit logout, otherwise we'd
 	// immediately re-authenticate the user we just logged out.
@@ -197,6 +226,19 @@ onBeforeMount(() => {
 		redirectToProvider(openidConnect.value.providers[0])
 	}
 })
+
+async function loginWithLocalAgentService() {
+	errorMessage.value = ''
+	serviceLoginPending.value = true
+	try {
+		await authStore.loginWithLocalAgentService()
+		redirectIfSaved()
+	} catch (e) {
+		errorMessage.value = getErrorText(e)
+	} finally {
+		serviceLoginPending.value = false
+	}
+}
 
 const usernameValid = ref(true)
 const usernameRef = ref<HTMLInputElement | null>(null)

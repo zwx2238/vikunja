@@ -18,6 +18,8 @@ package webtests
 
 import (
 	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -29,6 +31,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+const localAgentServiceLoginAuthorization = "Bearer local-agent-service-login"
 
 func TestLogin(t *testing.T) {
 	t.Run("Normal login", func(t *testing.T) {
@@ -83,6 +87,50 @@ func TestLogin(t *testing.T) {
 }`, nil, nil)
 		require.Error(t, err)
 		assertHandlerErrorCode(t, err, user.ErrCodeAccountLocked)
+	})
+}
+
+func TestLocalAgentServiceLogin(t *testing.T) {
+	request := func(t *testing.T, e http.Handler) *httptest.ResponseRecorder {
+		t.Helper()
+
+		req := httptest.NewRequest(
+			http.MethodPost,
+			"/api/v1/login",
+			strings.NewReader(`{"long_token":true}`),
+		)
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set(
+			"X-Local-Agent-Service-Authorization",
+			localAgentServiceLoginAuthorization,
+		)
+		rec := httptest.NewRecorder()
+		e.ServeHTTP(rec, req)
+		return rec
+	}
+
+	t.Run("rejects ambiguous user databases", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+
+		rec := request(t, e)
+		assert.Equal(t, http.StatusForbidden, rec.Code)
+	})
+
+	t.Run("issues a session for the only local human user", func(t *testing.T) {
+		e, err := setupTestEnv()
+		require.NoError(t, err)
+
+		s := db.NewSession()
+		_, err = s.Exec("UPDATE users SET bot_owner_id = 1 WHERE id <> 1")
+		require.NoError(t, err)
+		require.NoError(t, s.Commit())
+		require.NoError(t, s.Close())
+
+		rec := request(t, e)
+		assert.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+		assert.Contains(t, rec.Body.String(), `"token"`)
+		assert.Contains(t, rec.Header().Get("Set-Cookie"), "vikunja_refresh_token=")
 	})
 }
 

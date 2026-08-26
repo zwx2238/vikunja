@@ -27,6 +27,10 @@
 			>
 				<RouterView />
 			</NoAuthWrapper>
+			<ServiceCloseButton
+				v-if="localAgentService && !showAuthLayout"
+				standalone
+			/>
 		</template>
 
 		<KeyboardShortcuts v-if="keyboardShortcutsActive && !isQuickAddMode" />
@@ -51,6 +55,7 @@ import UpdateNotification from '@/components/home/UpdateNotification.vue'
 import KeyboardShortcuts from '@/components/misc/keyboard-shortcuts/index.vue'
 
 import AppHeader from '@/components/home/AppHeader.vue'
+import ServiceCloseButton from '@/components/home/ServiceCloseButton.vue'
 import ContentAuth from '@/components/home/ContentAuth.vue'
 import ContentLinkShare from '@/components/home/ContentLinkShare.vue'
 import NoAuthWrapper from '@/components/misc/NoAuthWrapper.vue'
@@ -69,6 +74,7 @@ import AddToHomeScreen from '@/components/home/AddToHomeScreen.vue'
 import DemoMode from '@/components/home/DemoMode.vue'
 import {AUTH_ROUTE_NAMES} from '@/constants/authRouteNames'
 import {useQuickAddMode} from '@/composables/useQuickAddMode'
+import {isLocalAgentTodoService} from '@/helpers/localAgentService'
 
 const importAccountDeleteService = () => import('@/services/accountDelete')
 import {success} from '@/message'
@@ -77,6 +83,7 @@ const authStore = useAuthStore()
 const baseStore = useBaseStore()
 
 const {isQuickAddMode} = useQuickAddMode()
+const localAgentService = isLocalAgentTodoService()
 
 // Native #main-content activation scrolls but never moves focus into <main>; do it explicitly for SPA routing
 function skipToMainContent() {
