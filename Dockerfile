@@ -12,7 +12,9 @@ RUN npm install -g corepack && corepack enable && \
     pnpm install --frozen-lockfile
 COPY frontend/ ./
 ARG RELEASE_VERSION=dev
-RUN echo "{\"VERSION\": \"${RELEASE_VERSION/-g/-}\"}" > src/version.json && pnpm run build
+ARG VIKUNJA_FRONTEND_BASE=/
+RUN echo "{\"VERSION\": \"${RELEASE_VERSION/-g/-}\"}" > src/version.json && \
+    VIKUNJA_FRONTEND_BASE="$VIKUNJA_FRONTEND_BASE" pnpm run build
 
 FROM --platform=$BUILDPLATFORM ghcr.io/techknowlogick/xgo:go-1.26.x@sha256:b00957d8fec512c4748a5fafe17197be1d8c0bf704b271fc4aa128f5ddf40414 AS apibuilder
 
