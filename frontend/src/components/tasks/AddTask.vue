@@ -305,6 +305,11 @@ defineExpose({
 		flex-shrink: 0;
 		margin-block-end: 0;
 	}
+
+	.task-input-wrapper {
+		flex-shrink: 1;
+		min-inline-size: 0;
+	}
 }
 
 .task-input-wrapper {

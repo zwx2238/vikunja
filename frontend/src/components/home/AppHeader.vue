@@ -1,6 +1,10 @@
 <template>
 	<header
-		:class="{ 'has-background': background, 'menu-active': menuActive }"
+		:class="{
+			'has-background': background,
+			'menu-active': menuActive,
+			'local-agent-service': localAgentService,
+		}"
 		aria-label="main navigation"
 		class="navbar d-print-none"
 	>
@@ -64,8 +68,8 @@
 
 		<div class="navbar-end">
 			<TimerBadge />
-			<OpenQuickActions />
-			<Notifications />
+			<OpenQuickActions class="navbar-optional-action" />
+			<Notifications class="navbar-optional-action" />
 			<ServiceCloseButton v-if="localAgentService" />
 			<Dropdown>
 				<template #trigger="{ toggleOpen, open }">
@@ -212,6 +216,17 @@ $user-dropdown-width-mobile: 5rem;
 	@media screen and (min-width: $tablet) {
 		padding-inline-start: 2rem;
 		align-items: stretch;
+	}
+
+	@media screen and (max-width: $tablet) {
+		&.local-agent-service {
+			inline-size: 100vw;
+			max-inline-size: 100vw;
+
+			.navbar-optional-action {
+				display: none;
+			}
+		}
 	}
 
 	&.menu-active {
