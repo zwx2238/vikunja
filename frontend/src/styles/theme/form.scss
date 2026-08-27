@@ -50,6 +50,15 @@
   $thickness: 1px;
   border-width: $thickness;
 
+  option {
+    background-color: var(--input-background-color);
+    color: var(--input-color);
+  }
+
+  option:disabled {
+    color: var(--input-disabled-color);
+  }
+
   &:not([multiple]) {
     height: calc(2.25rem + #{$thickness});
   }
