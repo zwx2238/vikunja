@@ -106,9 +106,11 @@ export default defineConfig(({command, mode}) => {
 function getBuildConfig(env: Record<string, string>) {
 	const workboxPkgPath = resolve(dirname(pathSrc), 'node_modules/workbox-precaching/package.json')
 	const workboxVersion = JSON.parse(readFileSync(workboxPkgPath, 'utf-8')).version
+	const frontendBase = env.VIKUNJA_FRONTEND_BASE
+	const assetBase = frontendBase === '/services/todo/' ? './' : frontendBase
 
 	return {
-		base: env.VIKUNJA_FRONTEND_BASE,
+		base: assetBase,
 		define: {
 			__WORKBOX_VERSION__: JSON.stringify(`v${workboxVersion}`),
 		},
