@@ -1,7 +1,10 @@
 import {describe, expect, it} from 'vitest'
 
 import {resolveFullBaseUrl} from './getFullBaseUrl'
-import {isLocalAgentTodoService} from './localAgentService'
+import {
+	isLocalAgentTodoService,
+	resolveLocalAgentTodoApiUrl,
+} from './localAgentService'
 
 describe('local Agent Service integration', () => {
 	it('enables service behavior for every Todo host path', () => {
@@ -11,6 +14,20 @@ describe('local Agent Service integration', () => {
 		expect(isLocalAgentTodoService(`/service-edge/sessions/todo/${'s'.repeat(32)}/`)).toBe(true)
 		expect(isLocalAgentTodoService('/')).toBe(false)
 		expect(isLocalAgentTodoService('/services/wiki/')).toBe(false)
+	})
+
+	it('keeps API requests inside the active Todo host path', () => {
+		expect(resolveLocalAgentTodoApiUrl('/services/todo/')).toBe('/services/todo/api/v1')
+		expect(
+			resolveLocalAgentTodoApiUrl(`/service-sessions/todo/${'s'.repeat(32)}/`),
+		).toBe(`/service-sessions/todo/${'s'.repeat(32)}/api/v1`)
+		expect(resolveLocalAgentTodoApiUrl('/service-edge/services/todo/')).toBe(
+			'/service-edge/services/todo/api/v1',
+		)
+		expect(
+			resolveLocalAgentTodoApiUrl(`/service-edge/sessions/todo/${'s'.repeat(32)}/`),
+		).toBe(`/service-edge/sessions/todo/${'s'.repeat(32)}/api/v1`)
+		expect(resolveLocalAgentTodoApiUrl('/')).toBeNull()
 	})
 
 	it('resolves the runtime base for Hub and Broker Edge launches', () => {

@@ -4,6 +4,7 @@ import pinia from './pinia'
 import router from './router'
 import App from './App.vue'
 import {error, success} from './message'
+import {resolveLocalAgentTodoApiUrl} from './helpers/localAgentService'
 
 // Notifications
 import Notifications from '@kyvg/vue3-notification'
@@ -24,9 +25,11 @@ declare global {
 	}
 }
 
-// Check if we have an api url in local storage and use it if that's the case
+const localAgentTodoApiUrl = resolveLocalAgentTodoApiUrl()
 const apiUrlFromStorage = localStorage.getItem('API_URL')
-if (apiUrlFromStorage !== null) {
+if (localAgentTodoApiUrl !== null) {
+	window.API_URL = localAgentTodoApiUrl
+} else if (apiUrlFromStorage !== null) {
 	window.API_URL = apiUrlFromStorage
 }
 
