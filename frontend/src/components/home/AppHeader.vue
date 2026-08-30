@@ -70,7 +70,6 @@
 			<TimerBadge />
 			<OpenQuickActions class="navbar-optional-action" />
 			<Notifications class="navbar-optional-action" />
-			<ServiceCloseButton v-if="localAgentService" />
 			<Dropdown>
 				<template #trigger="{ toggleOpen, open }">
 					<BaseButton
@@ -154,7 +153,6 @@ import Logo from '@/components/home/Logo.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import MenuButton from '@/components/home/MenuButton.vue'
 import OpenQuickActions from '@/components/misc/OpenQuickActions.vue'
-import ServiceCloseButton from '@/components/home/ServiceCloseButton.vue'
 
 import { getProjectTitle } from '@/helpers/getProjectTitle'
 import { isEditorContentEmpty } from '@/helpers/editorContentEmpty'
