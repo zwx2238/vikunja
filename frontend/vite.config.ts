@@ -169,6 +169,9 @@ function getBuildConfig(env: Record<string, string>) {
 				srcDir: 'src',
 				filename: 'sw.ts',
 				strategies: 'injectManifest',
+				injectManifest: {
+					globPatterns: ['**/*.{js,css,html,woff,woff2,ttf}'],
+				},
 				injectRegister: false,
 				useCredentials: true,
 				manifest: {
