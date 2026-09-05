@@ -27,6 +27,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"text/template"
@@ -42,7 +43,7 @@ import (
 const (
 	indexFile               = `index.html`
 	rootPath                = `dist/`
-	cacheControlMax         = `max-age=315360000, public, max-age=31536000, s-maxage=31536000, immutable`
+	cacheControlMax         = `public, max-age=31536000, s-maxage=31536000, immutable`
 	cacheControlNone        = `public, max-age=0, s-maxage=0, must-revalidate`
 	configScriptTagTemplate = `
 <script>
@@ -59,6 +60,7 @@ var etagCache map[string]string
 var etagLock sync.Mutex
 var scriptConfigString string
 var scriptConfigStringLock sync.Mutex
+var hashedCodeAsset = regexp.MustCompile(`^[A-Za-z0-9_.-]+-[A-Za-z0-9_-]{8,64}\.(js|css)$`)
 
 func init() {
 	etagCache = make(map[string]string)
@@ -237,15 +239,24 @@ func getCacheControlHeader(info os.FileInfo, file io.ReadSeeker) (header string,
 	if err != nil {
 		return "", err
 	}
+	contentType, _, err = mime.ParseMediaType(contentType)
+	if err != nil {
+		return "", err
+	}
+	// Go includes charset parameters for text MIME types. Only versioned code
+	// can skip revalidation; HTML and mutable runtime scripts must stay fresh.
+	if contentType == "text/css" || contentType == "application/javascript" || contentType == "text/javascript" {
+		if hashedCodeAsset.MatchString(info.Name()) {
+			return cacheControlMax, nil
+		}
+		return cacheControlNone, nil
+	}
 
 	// Cache everything looking like an asset
 	if strings.HasPrefix(contentType, "image/") ||
 		strings.HasPrefix(contentType, "font/") ||
 		strings.HasPrefix(contentType, "~images/") ||
 		strings.HasPrefix(contentType, "~font/") ||
-		contentType == "text/css" ||
-		contentType == "application/javascript" ||
-		contentType == "text/javascript" ||
 		contentType == "application/vnd.ms-fontobject" ||
 		contentType == "application/x-font-ttf" ||
 		contentType == "font/opentype" ||
