@@ -163,6 +163,14 @@ func NewEcho() *echo.Echo {
 	// downstream (logging, audit) sees the same value.
 	e.Use(middleware.RequestID())
 
+	// Public login routes must receive the Hub's application credentials too.
+	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+			promoteForwardedServiceAuthorization(c)
+			return next(c)
+		}
+	})
+
 	// Logger
 	if config.LogEnabled.GetBool() && config.LogHTTP.GetString() != "off" {
 		httpLogger := log.NewHTTPLogger(config.LogEnabled.GetBool(), config.LogHTTP.GetString(), config.LogFormat.GetString())

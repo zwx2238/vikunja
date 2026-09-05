@@ -42,8 +42,6 @@ func SetupTokenMiddleware() echo.MiddlewareFunc {
 	return echojwt.WithConfig(echojwt.Config{
 		SigningKey: []byte(config.ServiceSecret.GetString()),
 		Skipper: func(c *echo.Context) bool {
-			promoteForwardedServiceAuthorization(c)
-
 			// Public routes (docs, spec, info, etc.) never need JWT even
 			// when their parent group has the middleware applied.
 			if unauthenticatedAPIPaths[c.Path()] {

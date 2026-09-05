@@ -21,6 +21,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"code.vikunja.io/api/pkg/log"
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 )
@@ -63,6 +64,21 @@ func TestPromoteForwardedServiceAuthorization(t *testing.T) {
 			assert.Empty(t, c.Request().Header.Values(forwardedServiceAuthorizationHeader))
 		}
 	})
+}
+
+func TestForwardedServiceAuthorizationReachesPublicLogin(t *testing.T) {
+	log.InitLogger()
+	e := NewEcho()
+	e.POST("/api/v1/login", func(c *echo.Context) error {
+		assert.Equal(t, "Bearer local-agent-service-login", c.Request().Header.Get("Authorization"))
+		assert.Empty(t, c.Request().Header.Values(forwardedServiceAuthorizationHeader))
+		return c.NoContent(http.StatusNoContent)
+	})
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/login", nil)
+	request.Header.Set(forwardedServiceAuthorizationHeader, "Bearer local-agent-service-login")
+	response := httptest.NewRecorder()
+	e.ServeHTTP(response, request)
+	assert.Equal(t, http.StatusNoContent, response.Code)
 }
 
 func authorizationTestContext(t *testing.T) *echo.Context {
