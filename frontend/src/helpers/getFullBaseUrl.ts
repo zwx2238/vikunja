@@ -4,7 +4,7 @@
  * - will always end with a trailing slash 
  */
 export function getFullBaseUrl() {
-	return resolveFullBaseUrl(import.meta.env.BASE_URL, window.location.pathname)
+	return resolveFullBaseUrl(import.meta.env.BASE_URL, globalThis.location.pathname)
 }
 
 export function resolveFullBaseUrl(rawBase: string, pathname: string) {

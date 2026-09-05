@@ -1,6 +1,6 @@
-import {describe, expect, it} from 'vitest'
+import {describe, expect, it, vi} from 'vitest'
 
-import {resolveFullBaseUrl} from './getFullBaseUrl'
+import {getFullBaseUrl, resolveFullBaseUrl} from './getFullBaseUrl'
 import {
 	isLocalAgentTodoService,
 	markLocalAgentServiceReady,
@@ -8,6 +8,16 @@ import {
 } from './localAgentService'
 
 describe('local Agent Service integration', () => {
+	it('resolves the Service Worker base without a window global', () => {
+		vi.stubGlobal('window', undefined)
+		vi.stubGlobal('location', {pathname: '/services/todo/sw.js'})
+		try {
+			expect(getFullBaseUrl()).toBe('/services/todo/')
+		} finally {
+			vi.unstubAllGlobals()
+		}
+	})
+
 	it('marks a settled Service after its first painted frame', () => {
 		const frames: FrameRequestCallback[] = []
 		const calls: string[] = []
