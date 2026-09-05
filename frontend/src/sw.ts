@@ -62,7 +62,3 @@ self.addEventListener('notificationclick', function (event) {
 })
 
 workbox.core.clientsClaim()
-// The precaching code provided by Workbox.
-self.__precacheManifest = [].concat(self.__precacheManifest || [])
-workbox.precaching.precacheAndRoute(self.__precacheManifest, {})
-
