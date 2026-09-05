@@ -3,10 +3,31 @@ import {describe, expect, it} from 'vitest'
 import {resolveFullBaseUrl} from './getFullBaseUrl'
 import {
 	isLocalAgentTodoService,
+	markLocalAgentServiceReady,
 	resolveLocalAgentTodoApiUrl,
 } from './localAgentService'
 
 describe('local Agent Service integration', () => {
+	it('marks a settled Service after its first painted frame', () => {
+		const frames: FrameRequestCallback[] = []
+		const calls: string[] = []
+		const target = {documentElement: {setAttribute: (name: string) => calls.push(name)}} as unknown as Document
+		markLocalAgentServiceReady('/services/todo/', target, {
+			requestAnimationFrame: (callback) => frames.push(callback),
+		})
+		expect(calls).toEqual([])
+		frames.shift()!(0)
+		expect(calls).toEqual([])
+		frames.shift()!(0)
+		expect(calls).toEqual(['data-acp-service-ready'])
+	})
+
+	it('leaves ordinary deployments unchanged', () => {
+		markLocalAgentServiceReady('/', {} as Document, {
+			requestAnimationFrame: () => { throw new Error('must not schedule') },
+		})
+	})
+
 	it('enables service behavior for every Todo host path', () => {
 		expect(isLocalAgentTodoService('/services/todo/')).toBe(true)
 		expect(isLocalAgentTodoService(`/service-sessions/todo/${'s'.repeat(32)}/`)).toBe(true)

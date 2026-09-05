@@ -69,6 +69,7 @@ import AddToHomeScreen from '@/components/home/AddToHomeScreen.vue'
 import DemoMode from '@/components/home/DemoMode.vue'
 import {AUTH_ROUTE_NAMES} from '@/constants/authRouteNames'
 import {useQuickAddMode} from '@/composables/useQuickAddMode'
+import {markLocalAgentServiceReady} from '@/helpers/localAgentService'
 
 const importAccountDeleteService = () => import('@/services/accountDelete')
 import {success} from '@/message'
@@ -77,6 +78,14 @@ const authStore = useAuthStore()
 const baseStore = useBaseStore()
 
 const {isQuickAddMode} = useQuickAddMode()
+
+watch(
+	() => baseStore.ready || baseStore.error !== '',
+	(settled) => {
+		if (settled) markLocalAgentServiceReady()
+	},
+	{immediate: true, flush: 'post'},
+)
 
 // Native #main-content activation scrolls but never moves focus into <main>; do it explicitly for SPA routing
 function skipToMainContent() {
