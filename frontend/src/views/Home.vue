@@ -115,6 +115,6 @@ function handleClearLabelFilter() {
 
 <style scoped lang="scss">
 .show-tasks {
-	margin-block-start: 2rem;
+ margin-block-start: .75rem;
 }
 </style>
