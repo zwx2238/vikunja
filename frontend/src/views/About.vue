@@ -18,6 +18,7 @@
 					<p>{{ $t('about.frontendVersion', {version: frontendVersion}) }}</p>
 					<p>{{ $t('about.apiVersion', {version: apiVersion}) }}</p>
 				</template>
+				<AddToHomeScreen />
 			</div>
 			<template #footer>
 				<XButton
@@ -33,6 +34,7 @@
 
 <script setup lang="ts">
 import {computed} from 'vue'
+import AddToHomeScreen from '@/components/home/AddToHomeScreen.vue'
 
 import {VERSION as frontendVersion} from '@/version.json'
 

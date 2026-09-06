@@ -10,6 +10,7 @@
 		"welcomeEvening": "中午好，{username}！",
 		"lastViewed": "最近查看",
 		"addToHomeScreen": "将此应用程序添加到您的主屏幕以便更快地访问和改善体验。",
+		"installApp": "安装应用",
 		"goToOverview": "转到概览",
 		"project": {
 			"importText": "将您的项目和任务从其他服务导入 Vikunja：",

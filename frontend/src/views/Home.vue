@@ -1,9 +1,5 @@
 <template>
 	<div class="content has-text-centered">
-		<h1 v-if="salutation">
-			{{ salutation }}
-		</h1>
-
 		<Message
 			v-if="deletionScheduledAt !== null"
 			variant="danger"
@@ -59,12 +55,9 @@ import ImportHint from '@/components/home/ImportHint.vue'
 import {getHistory} from '@/modules/projectHistory'
 import {parseDateOrNull} from '@/helpers/parseDateOrNull'
 import {formatDateSince, formatDisplayDate} from '@/helpers/time/formatDate'
-import {useDaytimeSalutation} from '@/composables/useDaytimeSalutation'
 
 import {useProjectStore} from '@/stores/projects'
 import {useAuthStore} from '@/stores/auth'
-
-const salutation = useDaytimeSalutation()
 
 const authStore = useAuthStore()
 const projectStore = useProjectStore()
